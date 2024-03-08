@@ -1,0 +1,3 @@
+[workspace]
+members = [ "where-rs", "whered", "where-shared"]
+resolver = "2"
