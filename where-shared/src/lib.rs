@@ -14,12 +14,13 @@ pub const MAX_PAYLOAD_ENTRIES: usize = MAX_PAYLOAD_LENGTH / MAX_ENTRY_LENGTH;
 
 #[derive(Debug)]
 pub struct Session {
-    user: String,
-    pid: i32,
-    tty: String,
-    remote: Option<String>,
-    active: bool,
-    login_time: i64
+    pub host: Option<String>,
+    pub user: String,
+    pub pid: i32,
+    pub tty: String,
+    pub remote: Option<String>,
+    pub active: bool,
+    pub login_time: i64
 }
 
 #[derive(Debug)]
@@ -38,6 +39,10 @@ impl SessionCollection {
         Self {
             inner
         }
+    }
+
+    pub fn into_vec(self) -> Vec<Session> {
+        self.inner
     }
 
     pub fn to_udp_payload(self) -> EncodeDecodeResult<Vec<u8>> {
@@ -66,7 +71,7 @@ impl SessionCollection {
         }
     }
 
-    pub fn from_udp_payload(buffer: [u8; MAX_PAYLOAD_LENGTH]) -> EncodeDecodeResult<Self> {
+    pub fn from_udp_payload(buffer: [u8; MAX_PAYLOAD_LENGTH], host: &str) -> EncodeDecodeResult<Self> {
         let mut buf = Cursor::new(buffer);
         let mut inner = vec![];
         let mut magic = [0u8; 4];
@@ -81,7 +86,7 @@ impl SessionCollection {
         }
 
         for _ in 0..entry_count {
-            inner.push(Session::from_udp_payload(&mut buf)?);
+            inner.push(Session::from_udp_payload(&mut buf, &host)?);
         }
 
         if inner.len() != entry_count as usize {
@@ -95,7 +100,7 @@ impl SessionCollection {
 }
 
 impl Session {
-    pub fn from_udp_payload(cursor: &mut Cursor<[u8; MAX_PAYLOAD_LENGTH]>) -> EncodeDecodeResult<Self> {
+    pub fn from_udp_payload(cursor: &mut Cursor<[u8; MAX_PAYLOAD_LENGTH]>, host: &str) -> EncodeDecodeResult<Self> {
         let mut username_length = [0u8; 4];
         let mut pid = [0u8; 4];
         let mut tty_length = [0u8; 4];
@@ -162,7 +167,10 @@ impl Session {
         let active = active[0] == 1;
         let login_time = i64::from_be_bytes(login_time);
 
+        let host = Some(host.to_string());
+
         Ok(Self {
+            host,
             user,
             pid,
             tty,
@@ -247,6 +255,7 @@ impl From<Utmpx> for Session {
         let login_time = utmpx.timeval().tv_sec;
 
         Self {
+            host: None,
             user,
             pid,
             tty,
