@@ -1,9 +1,8 @@
-use std::cmp::max;
 use std::net::UdpSocket;
 use std::io::ErrorKind;
 use std::time::Duration;
 use where_shared::error::{WhereError, WhereResult};
-use where_shared::{MAX_PAYLOAD_LENGTH, SessionCollection, WHERED_MAGIC};
+use where_shared::{Session, SessionCollection, MAX_PAYLOAD_LENGTH, WHERED_MAGIC};
 use chrono::prelude::*;
 
 pub const TIMEOUT: Duration = Duration::from_millis(2000);
@@ -18,84 +17,13 @@ fn main() {
 
 fn start_client() -> WhereResult<()> {
     let servers = ["127.0.0.1:15"];
-    let mut entries = vec![];
+    let mut sessions = vec![];
 
     for server in servers {
-        entries.extend(process_server(server, "My Computer")?.into_vec());
+        sessions.extend(process_server(server, "My Computer")?.into_vec());
     }
 
-    entries.sort_by_key(|s| s.login_time);
-    entries.sort_by_key(|s| !s.active);
-
-    let max_host_length = entries.iter()
-        .max_by_key(|s| match &s.host {
-            Some(remote) => remote,
-            None => ""
-        })
-        .unwrap()
-        .host.clone().unwrap().len();
-    let max_username_length = entries.iter()
-        .max_by_key(|s| s.user.as_str())
-        .unwrap()
-        .user.len();
-    let max_tty_length = entries.iter()
-        .max_by_key(|s| s.tty.as_str())
-        .unwrap()
-        .tty.len();
-    let max_pid_length = entries.iter()
-        .max_by_key(|s| s.pid.to_string())
-        .unwrap()
-        .pid.to_string().len();
-    let max_remote_length = entries.iter()
-        .max_by_key(|s| match &s.remote {
-            Some(remote) => remote,
-            None => "Local"
-        })
-        .unwrap()
-        .remote.clone().unwrap_or("Local".to_string()).len();
-
-    let max_host_length = max(max_host_length, 4);
-    let max_remote_length = max(max_remote_length, 6);
-    let max_username_length = max(max_username_length, 4);
-    let max_tty_length = max(max_tty_length, 3);
-    let max_pid_length = max(max_pid_length, 3);
-
-    println!("Act  Host{}  Source{}  User{}  TTY{}  PID{}  Since",
-             " ".repeat(max_host_length - 4),
-             " ".repeat(max_remote_length - 6),
-             " ".repeat(max_username_length - 4),
-             " ".repeat(max_tty_length - 3),
-             " ".repeat(max_pid_length - 3),
-    );
-
-    for session in entries {
-        let active_str = if session.active {
-            "*"
-        } else {
-            " "
-        };
-        let host_str = session.host.unwrap_or("".to_string());
-        let remote_str = session.remote.unwrap_or("Local".to_string());
-
-        let datetime = DateTime::from_timestamp(session.login_time, 0).unwrap();
-        let time_str = datetime.format("%Y-%m-%d %H:%M:%S");
-
-        println!(" {}   {}{}  {}{}  {}{}  {}{}  {}{}  {}",
-                 active_str,
-                 host_str,
-                 " ".repeat(max(max_host_length, host_str.len()) - host_str.len()),
-                 remote_str,
-                 " ".repeat(max(max_remote_length, remote_str.len()) - remote_str.len()),
-                 session.user,
-                 " ".repeat(max(max_username_length, session.user.len()) - session.user.len()),
-                 session.tty,
-                 " ".repeat(max(max_tty_length, session.tty.len()) - session.tty.len()),
-                 session.pid,
-                 " ".repeat(max(max_pid_length, session.pid.to_string().len()) - session.pid.to_string().len()),
-                 time_str
-        );
-    }
-
+    print_summary(sessions);
     Ok(())
 }
 
@@ -119,4 +47,73 @@ fn process_server(server: &str, host: &str) -> WhereResult<SessionCollection> {
     }
 
     Err(WhereError::TimedOut(server.to_string(), MAX_SEND_RETRIES, TIMEOUT))
+}
+
+fn print_summary(mut sessions: Vec<Session>) {
+    fn max_key_with_min<T, F>(sessions: &[Session], get_key: F, floor: T) -> T
+    where
+        T: Ord + Default,
+        F: Fn(&Session) -> T
+    {
+        sessions.iter()
+            .max_by_key(|s| get_key(s))
+            .map(get_key)
+            .unwrap_or_default()
+            .max(floor)
+    }
+
+
+    sessions.sort_unstable_by_key(|s| s.login_time);
+    sessions.sort_by_key(|s| s.active);
+
+    const ACTIVE_PADDING: usize = 4;
+    let host_padding = max_key_with_min(&sessions, |s| s.host.as_deref().map_or(0, |str| str.len()), 5);
+    let remote_padding = max_key_with_min(&sessions, |s| s.remote.as_deref().map_or(0, |str| str.len()), 7);
+    let username_padding = max_key_with_min(&sessions, |s| s.user.len(), 5);
+    let tty_padding = max_key_with_min(&sessions, |s| s.tty.len(), 4);
+    let pid_padding = max_key_with_min(&sessions, |s| s.pid.abs().checked_ilog10().unwrap_or_default() + 1 + (s.pid < 0) as u32, 4);
+
+    println!("{:pad_0$} {:<pad_1$} {:<pad_2$} {:<pad_3$} {:<pad_4$} {:<pad_5$} {}",
+              "Act",
+              "Host",
+              "Source",
+              "User",
+              "TTY",
+              "PID",
+              "Since",
+              pad_0 = ACTIVE_PADDING,
+              pad_1 = host_padding,
+              pad_2 = remote_padding,
+              pad_3 = username_padding,
+              pad_4 = tty_padding,
+              pad_5 = pid_padding as usize);
+
+    for session in sessions {
+        let active = if session.active {
+            '*'
+        } else {
+            ' '
+        };
+
+        let host = session.host.unwrap_or_else(|| ' '.to_string());
+        let remote = session.remote.unwrap_or_else(|| "Local".to_owned());
+
+        let datetime = DateTime::from_timestamp(session.login_time, 0).unwrap();
+        let time = datetime.format("%Y-%m-%d %H:%M:%S");
+
+        println!("{:<pad_0$} {:<pad_1$} {:<pad_2$} {:<pad_3$} {:<pad_4$} {:<pad_5$} {}",
+                active,
+                host,
+                remote,
+                session.tty,
+                session.user,
+                session.pid,
+                time,
+                pad_0 = ACTIVE_PADDING,
+                pad_1 = host_padding,
+                pad_2 = remote_padding,
+                pad_3 = username_padding,
+                pad_4 = tty_padding,
+                pad_5 = pid_padding as usize);
+    }
 }
