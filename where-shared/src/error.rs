@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::string::FromUtf8Error;
 use std::{fmt, io};
 use std::time::Duration;
 use crate::{MAX_ENTRY_LENGTH, MAX_PAYLOAD_LENGTH};
@@ -15,6 +16,7 @@ pub enum EncodeDecodeError {
     BadMagic([u8; 4]),
     IncorrectEntryCount,
     StringSizeLimitExceeded(u32, usize),
+    StringDecodeError(FromUtf8Error),
     NonbinaryBoolean,
     EmptyRemote,
     IOErrorWhileTranscoding(io::Error)
@@ -35,9 +37,22 @@ impl From<EncodeDecodeError> for WhereError {
     }
 }
 
+impl From<FromUtf8Error> for WhereError {
+    fn from(value: FromUtf8Error) -> Self {
+        Self::EncodeDecodeError(EncodeDecodeError::StringDecodeError(value))
+    }
+}
+
 impl From<io::Error> for EncodeDecodeError {
     fn from(value: io::Error) -> Self {
         Self::IOErrorWhileTranscoding(value)
+    }
+}
+
+
+impl From<FromUtf8Error> for EncodeDecodeError {
+    fn from (value: FromUtf8Error) -> Self {
+        Self::StringDecodeError(value)
     }
 }
 
@@ -48,6 +63,7 @@ impl Display for EncodeDecodeError {
             Self::InvalidPayloadLength(s) => write!(f, "Invalid full payload length: {s} but maximum is {MAX_PAYLOAD_LENGTH}"),
             Self::BadMagic(m) => write!(f, "Invalid packet magic ({}), possible corruption or invalid server", String::from_utf8_lossy(m)),
             Self::IncorrectEntryCount => write!(f, "Invalid amount of entries decoded"),
+            Self::StringDecodeError(e) => write!(f, "String decoding error: {e}"),
             Self::StringSizeLimitExceeded(curr, max) => write!(f, "Exceeded length limit for payload string ({curr} > {max})"),
             Self::NonbinaryBoolean => write!(f, "Boolean value is not 0 or 1"),
             Self::EmptyRemote => write!(f, "Remote tag set but no remote host is present"),
