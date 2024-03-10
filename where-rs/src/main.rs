@@ -30,7 +30,8 @@ fn process_server(server: &str) -> WhereResult<SessionCollection> {
 
         match socket.recv_from(&mut buf) {
             Ok(_) => {
-                return Ok(SessionCollection::from_udp_payload(buf)?);
+                let collection = SessionCollection::from_udp_payload(buf)?;
+                return Ok(collection);
             },
             Err(e) if e.kind() == ErrorKind::TimedOut || e.kind() == ErrorKind::WouldBlock => continue,
             Err(e) => return Err(WhereError::from(e)),
