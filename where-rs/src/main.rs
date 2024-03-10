@@ -21,7 +21,7 @@ fn start_client() -> WhereResult<()> {
     let mut entries = vec![];
 
     for server in servers {
-        entries.extend(process_server(server)?.into_vec());
+        entries.extend(process_server(server, "My Computer")?.into_vec());
     }
 
     entries.sort_by_key(|s| s.login_time);
@@ -99,7 +99,7 @@ fn start_client() -> WhereResult<()> {
     Ok(())
 }
 
-fn process_server(server: &str) -> WhereResult<SessionCollection> {
+fn process_server(server: &str, host: &str) -> WhereResult<SessionCollection> {
     let socket = UdpSocket::bind("0.0.0.0:0")?;
     socket.set_read_timeout(Some(TIMEOUT))?;
 
@@ -110,7 +110,8 @@ fn process_server(server: &str) -> WhereResult<SessionCollection> {
 
         match socket.recv_from(&mut buf) {
             Ok(_) => {
-                return Ok(SessionCollection::from_udp_payload(buf, "My Computer")?);
+                let collection = SessionCollection::from_udp_payload(buf, host)?;
+                return Ok(collection);
             },
             Err(e) if e.kind() == ErrorKind::TimedOut || e.kind() == ErrorKind::WouldBlock => continue,
             Err(e) => return Err(WhereError::from(e)),
