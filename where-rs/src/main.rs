@@ -1,15 +1,41 @@
 use std::net::UdpSocket;
-use coreutils_core::ByteSlice;
-use where_shared::*;
+use std::io::ErrorKind;
+use std::time::Duration;
+use where_shared::error::{WhereError, WhereResult};
+use where_shared::{MAX_PAYLOAD_LENGTH, SessionCollection, WHERED_MAGIC};
+
+pub const TIMEOUT: Duration = Duration::from_millis(2000);
+pub const MAX_SEND_RETRIES: usize = 3;
 
 fn main() {
-    let socket = UdpSocket::bind("0.0.0.0:0").expect("Could not start a UDP socket.");
-    socket.send_to(&WHERED_MAGIC, "127.0.0.1:15").expect("Could not send data to the server.");
+    if let Err(e) = start_client() {
+        eprintln!("where: {}", e);
+        std::process::exit(1);
+    }
+}
 
-    let mut buf = [0; 1024];
-    socket.recv_from(&mut buf).expect("No data to receive from the server.");
+fn start_client() -> WhereResult<()> {
+    println!("{:?}", process_server("127.0.0.1:15")?);
+    Ok(())
+}
 
-    /*let list = SessionCollection::from_bytes(buf.to_vec());
-    println!("{:?}", list);*/
-    println!("{}", String::from_utf8_lossy(&buf));
+fn process_server(server: &str) -> WhereResult<SessionCollection> {
+    let socket = UdpSocket::bind("0.0.0.0:0")?;
+    socket.set_read_timeout(Some(TIMEOUT))?;
+
+    let mut buf = [0; MAX_PAYLOAD_LENGTH];
+
+    for _ in 0..MAX_SEND_RETRIES {
+        socket.send_to(&WHERED_MAGIC, server)?;
+
+        match socket.recv_from(&mut buf) {
+            Ok(_) => {
+                return Ok(SessionCollection::from_udp_payload(buf)?);
+            },
+            Err(e) if e.kind() == ErrorKind::TimedOut || e.kind() == ErrorKind::WouldBlock => continue,
+            Err(e) => return Err(WhereError::from(e)),
+        }
+    }
+
+    Err(WhereError::TimedOut(server.to_string(), MAX_SEND_RETRIES, TIMEOUT))
 }

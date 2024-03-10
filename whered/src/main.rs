@@ -1,23 +1,36 @@
 use std::net::UdpSocket;
-use where_shared::*;
+use where_shared::error::WhereResult;
+use where_shared::{SessionCollection, WHERED_MAGIC};
 
 fn main() {
-    let socket = UdpSocket::bind("0.0.0.0:15").expect("Could not bind to port 15, is another instance of whered running?");
+    if let Err(e) = run_server() {
+        eprintln!("whered: {}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run_server() -> WhereResult<()> {
+    let socket = UdpSocket::bind("0.0.0.0:15")?;
+    println!("Now listening on 0.0.0.0:15");
 
     loop {
-        let mut buf = [0; WHERED_MAGIC.len()];
-        let Ok((_, src)) = socket.recv_from(&mut buf) else {
-            eprintln!("Failed to receive data from the client, ignoring");
-            continue
-        };
-
-        println!("{src}: New client!");
-
-        let sessions = SessionCollection::fetch();
-        if let Err(_) = socket.send_to(&*sessions.into_bytes(), src) {
-            eprintln!("{src}: Failed to send data back to the client, ignoring");
-        } else {
-            println!("{src}: Completed request");
+        if let Err(e) = handle_request(&socket) {
+            eprintln!("whered: {}", e);
         }
     }
+}
+
+fn handle_request(socket: &UdpSocket) -> WhereResult<()> {
+    let mut buf = [0; WHERED_MAGIC.len()];
+
+    let (_, src) = socket.recv_from(&mut buf)?;
+    println!("{src}: New client!");
+
+    let sessions = SessionCollection::fetch();
+    let buf = sessions.to_udp_payload()?;
+
+    socket.send_to(&buf, src)?;
+    println!("{src}: Completed request within {} bytes", buf.len());
+
+    Ok(())
 }
