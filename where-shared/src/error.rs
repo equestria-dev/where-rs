@@ -1,13 +1,15 @@
 use std::fmt::Display;
 use std::string::FromUtf8Error;
 use std::{fmt, io};
+use std::net::AddrParseError;
 use std::time::Duration;
 use crate::{MAX_ENTRY_LENGTH, MAX_PAYLOAD_LENGTH};
 
 pub enum WhereError {
     EncodeDecodeError(EncodeDecodeError),
     IOError(io::Error),
-    TimedOut(String, usize, Duration)
+    TimedOut(String, String, usize, Duration),
+    CannotParseAddress(AddrParseError)
 }
 
 pub enum EncodeDecodeError {
@@ -49,10 +51,15 @@ impl From<io::Error> for EncodeDecodeError {
     }
 }
 
-
 impl From<FromUtf8Error> for EncodeDecodeError {
     fn from (value: FromUtf8Error) -> Self {
         Self::StringDecodeError(value)
+    }
+}
+
+impl From<AddrParseError> for WhereError {
+    fn from (value: AddrParseError) -> Self {
+        Self::CannotParseAddress(value)
     }
 }
 
@@ -77,7 +84,8 @@ impl Display for WhereError {
         match self {
             Self::EncodeDecodeError(e) => write!(f, "Encode/decode error: {e}"),
             Self::IOError(e) => write!(f, "Input/output error: {e}"),
-            Self::TimedOut(server, max_retry, timeout) => write!(f, "Timed out waiting for data from {server} after {max_retry} attempts every {} ms", timeout.as_millis())
+            Self::TimedOut(server, address, max_retry, timeout) => write!(f, "Timed out waiting for data from {server} ({address}) after {max_retry} attempts every {} ms", timeout.as_millis()),
+            Self::CannotParseAddress(e) => write!(f, "Unable to parse server address: {e}")
         }
     }
 }

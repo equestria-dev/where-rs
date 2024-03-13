@@ -1,4 +1,4 @@
-use std::net::UdpSocket;
+use std::net::{SocketAddr, UdpSocket};
 use where_shared::error::WhereResult;
 use where_shared::{SessionCollection, WHERED_MAGIC};
 
@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn run_server() -> WhereResult<()> {
-    let socket = UdpSocket::bind("0.0.0.0:15")?;
+    let socket = UdpSocket::bind(SocketAddr::from(([0, 0, 0, 0], 15)))?;
     println!("Now listening on 0.0.0.0:15");
 
     loop {

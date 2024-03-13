@@ -1,0 +1,80 @@
+#       where-rs: .where.toml, v1.0 2024/03/13
+
+# This is the where-rs configuration file.  Documentation is provided in-line.
+
+# where-rs is a collection of 2 programs: whered, the server-side implementation
+# of the WHRD/UDP protocol, and where(1), the client-side utility.
+
+# This configuration file covers the client-side part of where-rs.
+# If you don't know about TOML, check <https://toml.io/en/>.
+
+# The following options apply to all the backend servers that are connected.
+[global]
+
+# The default time to wait for a server to respond.  If overriden in a server-specific
+# configuration, that value is used instead.
+# Default: 2000
+#timeout = 2000
+
+# How many times where(1) should retry contacting a server if it does not reply
+# within the timeout.  If overriden in a server-specific configuration, that value
+# is used instead.
+# Default: 3
+#max_retries = 3
+
+# Whether inactive sessions should be shown in the output or not.  This includes
+# users that have logged out but their terminal is still unused, as well as
+# terminals reserved for specific users that have never been used since the system
+# started up.
+# Default: true
+#include_inactive = true
+
+# The default port to use for contacting a whered server if it is not specified in the
+# endpoint address.  The WHRD/UDP specification says the port should be 15/udp, but it
+# can be changed to adapt to environments where using port 15/udp is not possible.
+# Default: 15
+#port = 15
+
+# The default "Source" value if there is no SSH client connected.  This is the value that
+# is shown for local sessions.  This can also be an empty string, which is the default
+# behavior for POSIX's who(1).
+# Default: "Local"
+#source = "Local"
+
+# These are server-specific configurations.  There can be as many as you want, and each
+# server will be processed in the order that they are in the configuration file.  Only
+# the "endpoint" value is required in each server configuration.
+[[server]]
+
+# This is the address to connect to.  It can be any type of address (domain name, IPv4
+# or IPv6) and will use your default DNS server if needed.  The port defined in
+# global.port is used if no port is specified (through :<port> at the end).
+endpoint = "127.0.0.1"
+
+# The label that is displayed in the UI to represent this server.  If this is not set,
+# the "endpoint" value will be used instead.
+#label = "Computer"
+
+# This allows you to override the timeout value on a per-server basis (to, e.g., set a
+# higher timeout for servers that are farther away).  This timeout will take effect on
+# all the attempts to reach this server and only this server.
+# Default: 2000 (unless overriden by global.timeout)
+#timeout = 2000
+
+# This allows you to override the maximum allowed retries on a per-server basis.  This
+# value will be applied only for this server and can be used to, for instance, set a
+# higher threshold for more unstable servers.
+# Default: 3 (unless overriden by global.max_retries)
+#max_retries = 3
+
+# Whether where(1) should continue processing data even if this server has not responded
+# within the allowed time range.  By default, where(1) will stop if a server does not
+# respond after the maximum allowed retries.  If this is set to true, this server will
+# simply be ignored and where(1) will continue processing the next server.
+# Default: false
+#failsafe = false
+
+# Add more server configurations as you see fit:
+#[[server]]
+#endpoint = "10.51.0.2"
+#...

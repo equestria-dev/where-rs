@@ -44,6 +44,12 @@ impl SessionCollection {
             inner
         }
     }
+    
+    pub fn get_empty() -> Self {
+        Self {
+            inner: vec![]
+        }
+    }
 
     pub fn into_vec(self) -> Vec<Session> {
         self.inner
