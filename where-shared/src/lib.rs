@@ -97,7 +97,7 @@ impl SessionCollection {
         let entry_count = parse::read_field(&mut cursor, |buf| Ok(u16::from_be_bytes(buf)))?;
 
         for _ in 0..entry_count {
-            inner.push(Session::from_udp_payload(&mut cursor, &host)?);
+            inner.push(Session::from_udp_payload(&mut cursor, host)?);
         }
 
         Ok(Self {
