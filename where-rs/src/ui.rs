@@ -27,7 +27,7 @@ pub fn print_summary(mut sessions: Vec<Session>, config: GlobalConfig) {
     let pid_padding = max_key_with_min(&sessions, |s| s.pid.abs().checked_ilog10().unwrap_or_default() + 1 + (s.pid < 0) as u32, 4);
 
     if config.include_inactive {
-        println!("{:pad_0$} {:<pad_1$} {:<pad_2$} {:<pad_3$} {:<pad_4$} {:<pad_5$} Since",
+        println!("{:pad_0$}  {:<pad_1$}  {:<pad_2$}  {:<pad_3$}  {:<pad_4$}  {:<pad_5$}  Since",
                  "Act",
                  "Host",
                  "Source",
@@ -41,7 +41,7 @@ pub fn print_summary(mut sessions: Vec<Session>, config: GlobalConfig) {
                  pad_4 = tty_padding,
                  pad_5 = pid_padding as usize);
     } else {
-        println!("{:<pad_1$} {:<pad_2$} {:<pad_3$} {:<pad_4$} {:<pad_5$} Since",
+        println!("{:<pad_1$}  {:<pad_2$}  {:<pad_3$}  {:<pad_4$}  {:<pad_5$}  Since",
                  "Host",
                  "Source",
                  "User",
@@ -72,12 +72,12 @@ pub fn print_summary(mut sessions: Vec<Session>, config: GlobalConfig) {
         let time = datetime.format("%Y-%m-%d %H:%M:%S");
 
         if config.include_inactive {
-            println!(" {:<pad_0$} {:<pad_1$} {:<pad_2$} {:<pad_3$} {:<pad_4$} {:<pad_5$} {}",
+            println!(" {:<pad_0$}  {:<pad_1$}  {:<pad_2$}  {:<pad_3$}  {:<pad_4$}  {:<pad_5$}  {}",
                      active,
                      host,
                      remote,
-                     session.tty,
                      session.user,
+                     session.tty,
                      session.pid,
                      time,
                      pad_0 = ACTIVE_PADDING,
@@ -87,11 +87,11 @@ pub fn print_summary(mut sessions: Vec<Session>, config: GlobalConfig) {
                      pad_4 = tty_padding,
                      pad_5 = pid_padding as usize);
         } else {
-            println!("{:<pad_1$} {:<pad_2$} {:<pad_3$} {:<pad_4$} {:<pad_5$} {}",
+            println!("{:<pad_1$}  {:<pad_2$}  {:<pad_3$}  {:<pad_4$}  {:<pad_5$}  {}",
                      host,
                      remote,
-                     session.tty,
                      session.user,
+                     session.tty,
                      session.pid,
                      time,
                      pad_1 = host_padding,
