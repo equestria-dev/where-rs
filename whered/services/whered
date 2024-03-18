@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+
+name="whered"
+description="WHRD/UDP Protocol Server"
+command="/usr/bin/whered"
+command_args="${service_args}"
+command_user="whered:whered"
+
+depend() {
+    need net
+    use logger
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=WHRD/UDP Protocol Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=whered
+ExecStart=/usr/bin/whered
+
+[Install]
+WantedBy=multi-user.target
