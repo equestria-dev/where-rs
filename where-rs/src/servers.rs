@@ -1,5 +1,5 @@
 use std::io::ErrorKind;
-use std::net::{SocketAddr, UdpSocket};
+use std::net::{SocketAddr, ToSocketAddrs, UdpSocket};
 use std::time::Duration;
 use where_shared::error::{WhereError, WhereResult};
 use where_shared::{MAX_PAYLOAD_LENGTH, SessionCollection, WHERED_MAGIC};
@@ -7,15 +7,17 @@ use crate::config::{GlobalConfig, Server};
 
 impl Server {
     fn get_address(&self, config: &GlobalConfig) -> WhereResult<SocketAddr> {
-        let res: SocketAddr = match self.endpoint.parse() {
-            Ok(addr) => addr,
+        let res: SocketAddr = match self.endpoint.to_socket_addrs() {
+            Ok(mut addr) => {
+                addr.find(|i| i.is_ipv4()).unwrap()
+            },
             Err(_) => {
                 let mut endpoint = self.endpoint.clone();
                 let port = config.port.to_string();
 
                 endpoint.push(':');
                 endpoint.push_str(&port);
-                endpoint.parse()?
+                endpoint.to_socket_addrs()?.find(|i| i.is_ipv4()).unwrap()
             }
         };
 

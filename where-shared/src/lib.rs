@@ -110,13 +110,13 @@ impl Session {
     pub fn from_udp_payload(cursor: &mut PayloadCursor, host: &str) -> WhereResult<Self> {
         let pid = parse::read_field(cursor, |buf| Ok(i32::from_be_bytes(buf)))?;
         let login_time = parse::read_field(cursor, |buf| Ok(i64::from_be_bytes(buf)))?;
-        let user = parse::read_string_field(cursor)?;
-        let tty = parse::read_string_field(cursor)?;
+        let user = parse::read_string_field(cursor, MAX_USER_TTY_LENGTH as u32)?;
+        let tty = parse::read_string_field(cursor, MAX_USER_TTY_LENGTH as u32)?;
 
         let remote = {
             let has_remote_tag = parse::read_bool_field(cursor)?;
             if has_remote_tag {
-                Some(parse::read_string_field(cursor)?)
+                Some(parse::read_string_field(cursor, MAX_REMOTE_LENGTH as u32)?)
             } else {
                 None
             }
@@ -161,6 +161,7 @@ impl Session {
                 let host_bytes = host.into_bytes();
                 let host_length = (host_bytes.len() as u32).to_be_bytes();
 
+                bytes.push(1u8);
                 bytes.extend(&host_length);
                 bytes.extend(&host_bytes);
             }

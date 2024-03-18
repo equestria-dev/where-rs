@@ -1,7 +1,6 @@
 use std::io::Read;
 
 use crate::error::{EncodeDecodeError, WhereError, WhereResult};
-use crate::MAX_USER_TTY_LENGTH;
 use crate::PayloadCursor;
 
 pub fn read_field<const N: usize, F, T>(cursor: &mut PayloadCursor, convert_func: F) -> WhereResult<T>
@@ -31,11 +30,11 @@ pub fn read_bool_field(cursor: &mut PayloadCursor) -> WhereResult<bool> {
     Ok(value)
 }
 
-pub fn read_string_field(cursor: &mut PayloadCursor) -> WhereResult<String> {
+pub fn read_string_field(cursor: &mut PayloadCursor, max_length: u32) -> WhereResult<String> {
     let string_length = read_field(cursor, |buf| Ok(u32::from_be_bytes(buf)))?;
 
-    if string_length > MAX_USER_TTY_LENGTH as u32 {
-        return Err(WhereError::EncodeDecodeError(EncodeDecodeError::StringSizeLimitExceeded(string_length, MAX_USER_TTY_LENGTH)));
+    if string_length > max_length {
+        return Err(WhereError::EncodeDecodeError(EncodeDecodeError::StringSizeLimitExceeded(string_length, max_length as usize)));
     }
 
     let string = read_field_dynamic(cursor, string_length as usize, |buf| Ok(String::from_utf8(buf)?))?;
