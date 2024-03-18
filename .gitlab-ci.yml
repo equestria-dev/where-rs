@@ -1,5 +1,6 @@
 stages:
-  - build
+  - debug
+  - release
 
 rust-latest:
   stage: build
@@ -15,3 +16,23 @@ rust-nightly:
     - cargo build --verbose
     - cargo test --verbose
   allow_failure: true
+
+release-arm-linux:
+  stage: release
+  image: rust:latest
+  script:
+    - cargo build --verbose --release --target aarch64-unknown-linux-gnu
+  artifacts:
+    paths:
+      - target/aarch64-unknown-linux-gnu/release/where
+      - target/aarch64-unknown-linux-gnu/release/whered
+
+release-x86-linux:
+  stage: release
+  image: rust:latest
+  script:
+    - cargo build --verbose --release --target x86_64-unknown-linux-gnu
+  artifacts:
+    paths:
+      - target/x86_64-unknown-linux-gnu/release/where
+      - target/x86_64-unknown-linux-gnu/release/whered
