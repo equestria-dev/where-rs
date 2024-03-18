@@ -3,14 +3,14 @@ stages:
   - release
 
 rust-latest:
-  stage: build
+  stage: debug
   image: rust:latest
   script:
     - cargo build --verbose
     - cargo test --verbose
 
 rust-nightly:
-  stage: build
+  stage: debug
   image: rustlang/rust:nightly
   script:
     - cargo build --verbose
