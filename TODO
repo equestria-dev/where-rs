@@ -1,0 +1,3 @@
+- Make the server discard oldest sessions when the payload is too large to fit in a single UDP packet (or make it a config option).
+- Make the server accept a different listen address/port.
+
