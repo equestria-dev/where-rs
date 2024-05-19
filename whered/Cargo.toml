@@ -1,9 +1,10 @@
 [package]
 name = "whered"
-version = "0.2.0"
+version = "1.0.0-rc.1"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "A small Rust server for the WHRD/UDP protocol, to access a list of logged in users on multiple systems at once."
+authors = ["Raindrops", "ryze132"]
 
 [dependencies]
-where-shared = { path = "../where-shared" }
+whrd = { path = "../whrd" }
+clap = { version = "4.5.3", features = ["derive"] }

@@ -1,0 +1,13 @@
+[package]
+name = "whrd"
+version = "1.0.0-rc.1"
+edition = "2021"
+description = "A Rust library to work with the WHRD/UDP protocol, a protocol to access a list of logged in users on multiple systems at once."
+authors = ["Raindrops", "ryze132"]
+
+[lib]
+name = "whrd"
+crate-type = ["dylib", "lib"]
+
+[dependencies]
+coreutils_core = "0.1.1"

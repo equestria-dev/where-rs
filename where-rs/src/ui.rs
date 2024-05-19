@@ -1,5 +1,5 @@
 use chrono::DateTime;
-use where_shared::Session;
+use whrd::Session;
 use crate::config::GlobalConfig;
 
 pub fn print_summary(mut sessions: Vec<Session>, config: GlobalConfig) {

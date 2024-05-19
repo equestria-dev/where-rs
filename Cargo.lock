@@ -686,27 +686,28 @@ checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
 
 [[package]]
 name = "where-rs"
-version = "1.0.0-rc"
+version = "1.0.0-rc.1"
 dependencies = [
  "chrono",
  "clap",
  "serde",
  "toml",
- "where-shared",
-]
-
-[[package]]
-name = "where-shared"
-version = "1.0.0"
-dependencies = [
- "coreutils_core",
+ "whrd",
 ]
 
 [[package]]
 name = "whered"
-version = "0.2.0"
+version = "1.0.0-rc.1"
 dependencies = [
- "where-shared",
+ "clap",
+ "whrd",
+]
+
+[[package]]
+name = "whrd"
+version = "1.0.0-rc.1"
+dependencies = [
+ "coreutils_core",
 ]
 
 [[package]]

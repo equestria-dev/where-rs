@@ -1,5 +1,5 @@
 [workspace]
-members = [ "where-rs", "whered", "where-shared"]
+members = ["where-rs", "whered", "whrd"]
 resolver = "2"
 
 [profile.release]

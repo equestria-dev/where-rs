@@ -1,8 +1,8 @@
 use std::io::ErrorKind;
 use std::net::{SocketAddr, ToSocketAddrs, UdpSocket};
 use std::time::Duration;
-use where_shared::error::{WhereError, WhereResult};
-use where_shared::{MAX_PAYLOAD_LENGTH, SessionCollection, WHERED_MAGIC};
+use whrd::error::{WhereError, WhereResult};
+use whrd::{MAX_PAYLOAD_LENGTH, SessionCollection, WHERED_MAGIC};
 use crate::config::{GlobalConfig, Server};
 
 impl Server {

@@ -1,21 +1,40 @@
+mod args;
+
+use args::Args;
 use std::net::{SocketAddr, UdpSocket};
-use where_shared::error::WhereResult;
-use where_shared::{SessionCollection, WHERED_MAGIC};
+use std::process;
+use std::str::FromStr;
+use clap::Parser;
+use whrd::error::{WhereError, WhereResult};
+use whrd::{SessionCollection, WHERED_MAGIC};
 
 fn main() {
-    if let Err(e) = run_server() {
+    let args = Args::parse();
+    let listen_addr = args.listen_addr.unwrap_or(String::from("0.0.0.0:15"));
+
+    if let Err(e) = run_server(&listen_addr) {
         eprintln!("whered: {}", e);
-        std::process::exit(1);
+        process::exit(1);
     }
 }
 
-fn run_server() -> WhereResult<()> {
-    let socket = UdpSocket::bind(SocketAddr::from(([0, 0, 0, 0], 15)))?;
-    println!("Now listening on 0.0.0.0:15");
+fn run_server(listen_addr: &str) -> WhereResult<()> {
+    let socket_addr_result = SocketAddr::from_str(listen_addr);
 
-    loop {
-        if let Err(e) = handle_request(&socket) {
-            eprintln!("whered: {}", e);
+    match socket_addr_result {
+        Ok(socket_addr) => {
+            let socket = UdpSocket::bind(socket_addr)?;
+            println!("Now listening on {} port {}/udp", socket_addr.ip(), socket_addr.port());
+
+            loop {
+                if let Err(e) = handle_request(&socket) {
+                    eprintln!("whered: {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("whered: {}", WhereError::from(e));
+            process::exit(1);
         }
     }
 }

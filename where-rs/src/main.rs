@@ -5,7 +5,7 @@ mod args;
 
 use clap::Parser;
 use args::Args;
-use where_shared::error::WhereResult;
+use whrd::error::WhereResult;
 use config::{Config, Server};
 
 fn main() {
