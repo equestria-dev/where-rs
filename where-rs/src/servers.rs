@@ -40,7 +40,7 @@ impl Server {
 
         match socket.recv_from(&mut buf) {
             Ok(_) => {
-                let collection = SessionCollection::from_udp_payload(buf, &label)?;
+                let collection = SessionCollection::from_udp_payload(buf, label)?;
                 Ok(Some(collection))
             },
             Err(e) if e.kind() == ErrorKind::TimedOut || e.kind() == ErrorKind::WouldBlock => Ok(None),
