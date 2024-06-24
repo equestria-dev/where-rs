@@ -1,9 +1,9 @@
 [package]
 name = "where-rs"
-version = "1.0.0-rc.1"
+version = "1.0.0"
 edition = "2021"
 description = "A small Rust client for the WHRD/UDP protocol, to access a list of logged in users on multiple systems at once."
-authors = ["Raindrops", "ryze132"]
+authors = ["Starscouts", "ryze132"]
 
 [[bin]]
 name = "where"
