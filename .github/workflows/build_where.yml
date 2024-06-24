@@ -1,0 +1,40 @@
+name: Build where
+
+on:
+  push:
+    branches: [ mane ]
+  pull_request:
+    branches: [ mane ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+        profile: [ dev, release ]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: cargo build --all --profile ${{ matrix.profile }}
+    - name: Check
+      run: cargo clippy --profile ${{ matrix.profile }} -- -D warnings
+    - name: Test message exchange
+      working-directory: target/${{ matrix.profile == 'dev' && 'debug' || matrix.profile }}
+      run: |
+        ./where -c
+        ./whered &
+
+        i=0
+        while [ ! $(pgrep whered) ] && [ $i -lt 10 ]
+        do
+          sleep 1
+          ((i++))
+        done
+
+        ./where
