@@ -27,8 +27,12 @@ jobs:
     - name: Test message exchange
       working-directory: target/${{ matrix.profile == 'dev' && 'debug' || matrix.profile }}
       run: |
-        ./where -c
-        ./whered &
+        touch ~/.config/where.toml
+        echo '[global]' >> ~/.config/where.toml
+        echo '[[server]]' >> ~/.config/where.toml
+        echo 'endpoint="127.0.0.1:5000"' >> ~/.config/where.toml
+
+        ./whered -l 127.0.0.1:5000 &
 
         i=0
         while [ ! $(pgrep whered) ] && [ $i -lt 10 ]
