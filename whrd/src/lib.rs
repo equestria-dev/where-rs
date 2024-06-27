@@ -1,4 +1,5 @@
 use std::io::Cursor;
+use std::path::PathBuf;
 use coreutils_core::os::utmpx::*;
 
 use crate::error::{WhereResult, EncodeDecodeResult, EncodeDecodeError};
@@ -192,7 +193,12 @@ impl From<Utmpx> for Session {
         } else {
             Some(host)
         };
-        let active = utmpx.entry_type() == UtmpxKind::UserProcess;
+
+        // Work around a bug in Utmpx causing killed sessions to show as
+        // active when they are not.
+        let mut path = PathBuf::from("/dev");
+        path.push(utmpx.device_name().to_string());
+        let active = utmpx.entry_type() == UtmpxKind::UserProcess && path.exists();
         let login_time = utmpx.timeval().tv_sec;
 
         Self {
