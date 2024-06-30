@@ -686,7 +686,7 @@ checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
 
 [[package]]
 name = "where-rs"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "chrono",
  "clap",
@@ -697,7 +697,7 @@ dependencies = [
 
 [[package]]
 name = "whered"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "clap",
  "whrd",
@@ -705,7 +705,7 @@ dependencies = [
 
 [[package]]
 name = "whrd"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "coreutils_core",
 ]
